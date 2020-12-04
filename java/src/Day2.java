@@ -8,19 +8,18 @@ public class Day2 {
 	static boolean part1 = false; // Toggle true to solve for part 1 and false to solve for part 2
 
 	public static void main(String[] args) throws Exception {
-		File file = new File("input\\input.txt");
+		
+		StringBuffer data = ReadURL.getWebData(2, "patrick");
 
-		BufferedReader br = new BufferedReader(new FileReader(file));
-		String line;
 		int count = 0;
-
-		while ((line = br.readLine()) != null) {
-			if (parseLine(line)) {
+		
+		String[] lines = data.toString().split("\\n");
+		for(String s: lines){
+			if (parseLine(s)) {
 				count++;
 			}
 		}
 		System.out.println(count);
-		br.close();
 	}
 
 	private static boolean parseLine(String line) {
