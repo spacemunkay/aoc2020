@@ -1,0 +1,9 @@
+# writing
+# {:ok, file} = File.open("hello", [:write])
+# IO.binwrite(file, "world")
+# File.close(file)
+
+# reading
+content = File.read("input/jason")
+IO.inspect content
+

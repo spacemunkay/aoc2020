@@ -1,0 +1,57 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+# http://erlang.org/doc/man/httpc.html
+url = "https://adventofcode.com/2020/day/2/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+#IO.inspect String.split("a,b,c", ",", trim: true)
+lines = String.split(List.to_string(body), "\n", trim: true)
+passwords = for line <- lines do
+  #1-4 n: nnnnn
+  #IO.inspect String.split(line, " ", trim: true)
+  #{range, letter, password} = String.split(line, " ", trim: true)
+  [rng, l, p] = String.split(line, " ", trim: true)
+  [min, max] = rng |> String.split("-", trim: true)
+  char = String.at(l,0)
+  {min, max, char, p}
+end
+#IO.inspect passwords
+
+defmodule Validation do
+  def validate(tuple) do
+    {min, max, char, password} = tuple
+    {:ok, r } = Regex.compile(char)
+    char_count = Regex.scan(r, password) |> Enum.count
+    result = char_count >= String.to_integer(min) and char_count <= String.to_integer(max)
+    result
+  end
+  def validatePosition(tuple) do
+    {pos1, pos2, char, password} = tuple
+    IO.inspect(tuple)
+    result1 = String.at(password, String.to_integer(pos1) - 1 ) == char
+    result2 = String.at(password, String.to_integer(pos2) - 1) == char
+    result = !(result1 and result2) and (result1 or result2)
+    IO.inspect String.at(password, String.to_integer(pos1))
+    IO.inspect(result)
+    result
+  end
+end
+
+#IO.inspect elem(passwords, 0)
+IO.inspect hd(passwords)
+first = hd(passwords)
+#IO.inspect elem(first, 2)
+#IO.inspect apply(Validation, :validate,  first |> Tuple.to_list)
+#IO.inspect Validation.validate(elem(first,0), elem(first,1), elem(first,2), elem(first,3))
+valid = Enum.filter(passwords, &Validation.validate/1)
+IO.inspect valid |> Enum.count
+
+validPos = Enum.filter(passwords, &Validation.validatePosition/1)
+IO.inspect validPos |> Enum.count
+#for password <- passwords do:
+#end
