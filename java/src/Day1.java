@@ -2,7 +2,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 //52463-2962d21f
-public class SumThree {
+public class Day1 {
 	public static void main(String[] args) {
 		int sum = 2020;
 		Integer[] list = { 1446, 1893, 1827, 1565, 1728, 497, 1406, 1960, 1986, 1945, 1731, 1925, 1550, 1841, 1789,

@@ -4,8 +4,6 @@ import java.util.regex.Pattern;
 
 public class Day4 {
 
-	static boolean detailedPassports = true; // Toggle true for part 2
-
 	public static void main(String[] args) throws Exception {
 
 		StringBuffer data = ReadURL.getWebData(4, "patrick");
@@ -13,17 +11,24 @@ public class Day4 {
 		String[] passports = data.toString().split("\\n\\n");
 		int count = 0;
 		for (String passport : passports) {
-			if (isValid(passport)) {
+			if (isValid(passport, false)) {
 				count++;
 			}
 		}
-		System.out.println(count);
+		System.out.println("first answer = " + count);
+		count = 0;
+		for (String passport : passports) {
+			if (isValid(passport, true)) {
+				count++;
+			}
+		}
+		System.out.println("second answer = " + count);
 	}
 
-	private static boolean isValid(String passport) {
+	private static boolean isValid(String passport, boolean details) {
 		String[] fields = passport.split("\\s");
 		if (fields.length == 8) {
-			return detailedPassports ? validDetails(fields) : true;
+			return details ? validDetails(fields) : true;
 		}
 		if (fields.length == 7) {
 			for (String field : fields) {
@@ -31,7 +36,7 @@ public class Day4 {
 					return false;
 				}
 			}
-			return detailedPassports ? validDetails(fields) : true;
+			return details ? validDetails(fields) : true;
 		}
 		return false;
 	}
