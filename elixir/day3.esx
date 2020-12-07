@@ -1,0 +1,53 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/3/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+lines = String.split(List.to_string(body), "\n", trim: true)
+numCols = lines |> List.first|> String.length
+rows = lines |> length
+IO.inspect lines |> List.first
+IO.inspect numCols
+slope = {3, 1}
+
+
+defmodule SlopeMachine do
+
+  def popN(list, n) do
+    if List.first(list) == nil or n <= 0 do
+      list
+    else
+      popN(tl(list), n - 1)
+    end
+  end
+
+  def next(xPos, slope, totalCount, remainingLines) do
+    line = hd(remainingLines)
+    tail = popN(remainingLines, elem(slope,1))
+
+    numCols = line |> String.length
+    char = String.at(line, rem(xPos, numCols))
+    newTotalCount = totalCount + if (char == "#"), do: 1, else: 0
+
+    if List.first(tail) == nil do
+      totalCount
+    else
+      next(xPos + elem(slope,0), slope, newTotalCount, tail)
+    end
+  end
+end
+
+slopes = [{1,1}, {3,1}, {5,1}, {7,1}, {1,2}]
+#Enum.map([1,2,3], &String.duplicate("a", &1))
+totals = Enum.map(slopes, &SlopeMachine.next(0, &1, 0, lines))
+IO.inspect(totals)
+#Enum.reduce([1, 2, 3, 4], fn(x, acc) -> x * acc end)
+product = Enum.reduce(totals, fn(x, acc) -> x * acc end)
+
+#Expect 4355551200
+IO.inspect(product)
