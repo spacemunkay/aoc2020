@@ -1,0 +1,81 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/4/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+lines = String.split(List.to_string(body), "\n\n", trim: true)
+#IO.inspect(lines)
+
+defmodule Validation do
+
+  def count_string(needle, haystack) do
+    {:ok, r } = Regex.compile(needle)
+    Regex.scan(r, haystack) |> Enum.count
+  end
+
+  def full_validate(line) do
+    (validate(line) and validate_fields(line))
+  end
+
+  def validate(line) do
+    char_count = count_string(":", line)
+    case char_count do
+      8 -> true
+      7 -> count_string("cid",line) == 0
+      _ -> false
+    end
+  end
+
+
+  def validate_fields(line) do
+    {:ok, r } = Regex.compile("[\s\n]")
+    rough_fields = String.split(line, r, trim: true)
+    #, fn(x, acc) -> x * acc end
+    fields = Enum.map(rough_fields, fn(pair) -> String.split(pair, ":", trim: true) end)
+    Enum.all?(fields, &validate_field/1)
+  end
+
+  def validate_field(field_pair) do
+    [field_name, field_value] = field_pair
+    #IO.inspect field_pair
+    result = case field_name do
+      "byr" -> String.to_integer(field_value) >= 1920 and String.to_integer(field_value) <= 2002
+      "iyr" -> String.to_integer(field_value) >= 2010 and String.to_integer(field_value) <= 2020
+      "eyr" -> String.to_integer(field_value) >= 2020 and String.to_integer(field_value) <= 2030
+      "hgt" -> validate_hgt(field_value)
+      "hcl" -> Regex.match?(~r/^#[0-9a-f]{6}$/, field_value)
+      "ecl" -> Regex.match?(~r/^(amb|blu|brn|gry|grn|hzl|oth)$/, field_value)
+      "pid" -> Regex.match?(~r/^\d{9}$/, field_value)
+      "cid" -> true
+      _ -> IO.inspect(field_value) and false
+    end
+    #IO.inspect result
+    result
+  end
+
+  def validate_hgt(rough_height) do
+    result = Regex.run(~r/(\d+)(\w+)/, rough_height)
+    case result do
+      [_, height, "in"] -> String.to_integer(height) >= 59 and String.to_integer(height) <= 76
+      [_, height, "cm"] -> String.to_integer(height) >= 150 and String.to_integer(height) <= 193
+      _ -> false
+    end
+  end
+
+end
+
+valid = Enum.filter(lines, &Validation.validate/1)
+IO.inspect valid |> Enum.count
+
+#validate =  Validation.validate_fields(List.first(lines))
+#validate =  Validation.validate_hgt("167cm")
+
+#IO.inspect(validate)
+full_valid = Enum.filter(lines, &Validation.full_validate/1)
+IO.inspect lines |> Enum.count
+IO.inspect full_valid |> Enum.count
