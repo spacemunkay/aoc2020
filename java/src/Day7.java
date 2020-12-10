@@ -3,6 +3,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+// Solution for Day 7
 public class Day7 {
 
 	public static void main(String[] args) throws Exception {
