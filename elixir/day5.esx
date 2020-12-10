@@ -1,0 +1,53 @@
+use Bitwise
+
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/5/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+lines = String.split(List.to_string(body), "\n", trim: true)
+#IO.inspect(lines)
+reversed_lines = Enum.map(lines, &String.reverse/1)
+sets = Enum.map(reversed_lines, &String.split_at(&1, 3))
+
+defmodule BitStuff do
+  def convert(string) do
+    #https://hexdocs.pm/elixir/master/String.html
+    chars = String.graphemes(string)
+    chars_w_index = Enum.with_index(chars, 0)
+    #Enum.reduce([1, 2, 3, 4], fn x, acc -> x * acc end)
+    #map_reduce(enumerable, acc, fun)
+    #Enum.map_reduce([1, 2, 3], 0, fn x, acc -> {x * 2, x + acc} end)
+    Enum.reduce(chars_w_index, 0, fn pair, acc ->
+      {char, idx} = pair
+      bit = case char do
+        "R" -> 1 <<< idx
+        "B" -> 1 <<< idx
+        _ -> 0
+      end
+      acc ||| bit
+    end )
+  end
+end
+
+numbered_sets = Enum.map(sets, fn(pair) ->
+  {col, row} = pair
+  col_int = BitStuff.convert(col)
+  row_int = BitStuff.convert(row)
+  {row_int, col_int, row_int * 8 + col_int }
+end
+)
+ordered_sets = Enum.sort_by(numbered_sets, &elem(&1, 2), &>=/2 )
+ordered_ids = Enum.map(ordered_sets, &elem(&1, 2))
+first_id = List.first(ordered_ids)
+last_id = List.last(ordered_ids)
+all_ids = (first_id..last_id)
+
+remaining_ids = Enum.drop_while(all_ids, fn(id) -> Enum.find(ordered_ids, false, fn(x) -> x == id end) end)
+missing = List.first(remaining_ids)
+IO.inspect(missing)
