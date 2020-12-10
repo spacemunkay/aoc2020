@@ -6,7 +6,7 @@ public class Day4 {
 
 	public static void main(String[] args) throws Exception {
 
-		StringBuffer data = ReadURL.getWebData(4, "patrick");
+		StringBuffer data = ReadURL.getWebData(4, "jason");
 
 		String[] passports = data.toString().split("\\n\\n");
 		int count = 0;
