@@ -1,0 +1,18 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/6/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+lines = String.split(List.to_string(body), "\n\n", trim: true)
+groups = Enum.map(lines, &String.split(&1, "\n", trim: true))
+IO.inspect groups
+
+# defmodule Counter
+#   def count(group)
+#   end
+# end
