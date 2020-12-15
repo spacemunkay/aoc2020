@@ -5,7 +5,7 @@ public class Day6 {
 
 	public static void main(String[] args) throws Exception {
 
-		StringBuffer data = ReadURL.getWebData(6, "patrick");
+		StringBuffer data = ReadURL.getWebData(6, "jason");
 		String[] answerSets = data.toString().split("\\n\\n");
 
 		int sumAny = 0, sumEvery = 0;
