@@ -9,8 +9,38 @@ Application.ensure_all_started(:ssl)
   :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
 
 lines = String.split(List.to_string(body), "\n\n", trim: true)
-groups = Enum.map(lines, &String.split(&1, "\n", trim: true))
-IO.inspect groups
+#IO.inspect lines
+#groups = Enum.map(lines, &String.split(&1, "\n", trim: true))
+
+joined_groups = Enum.map(lines, fn(line) ->
+  g_split = String.split(line, "\n", trim: true)
+  num_answers = length(g_split)
+  {String.replace(line, "\n", ""), num_answers}
+end)
+# a
+# b
+# b
+# { "abb", 3}
+#IO.inspect(joined_groups)
+list_groups = Enum.map(joined_groups, fn({string, num_answers}) ->
+  {String.split(string, "", trim: true), num_answers }
+end)
+#IO.inspect list_groups
+uniq_count_groups = Enum.map(list_groups, fn({char_list, num_answers}) ->
+  Enum.reduce(char_list, %{"num_answers" => num_answers}, fn(char, acc_map) ->
+    char_count = Map.get(acc_map, char, 0)
+    Map.put(acc_map, char, char_count + 1)
+  end)
+end)
+score = Enum.reduce(uniq_count_groups, 0, fn(map, acc) ->
+  num_answers = Map.get(map, "num_answers")
+  valid_chars = Map.keys(map) |> Enum.filter(fn(x) -> Map.get(map,x) >= num_answers end)
+    length(valid_chars) - 1 + acc
+end)
+IO.inspect score
+#IO.inspect groups
+
+
 
 # defmodule Counter
 #   def count(group)
