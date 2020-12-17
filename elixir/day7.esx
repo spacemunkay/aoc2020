@@ -1,0 +1,59 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/7/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+lines = String.split(List.to_string(body), "\n", trim: true)
+#IO.inspect(lines)
+#lines = ["drab fuchsia bags contain 4 plaid silver bags.", "striped beige bags contain no other bags.","muted fuchsia bags contain 1 plaid silver bag, 5 shiny silver bags, 3 dark orange bags, 5 posh silver bags."]
+
+defmodule BagRules do
+  # {bag_id, num_bags, sub_bags}
+  def add(line) do
+     [bag_id, unparsed_contains] = line |> String.split("bags contain")
+    contains = unparsed_contains
+      |> String.split(~r/(no other bags.|bags,|bags.|bag,|bag.)/)
+      |> Enum.filter( fn(x) -> x != ""  and x != " " end)
+      |> Enum.map(&String.trim/1)
+      |> Enum.map(&String.split_at(&1, 1))
+      |> Enum.map(fn({sint, id}) -> {elem(Integer.parse(sint),0) , String.trim(id)} end)
+    {String.trim(bag_id), contains}
+  end
+
+  def findParents(rules_dict, bag_id) do
+    parent_keys = rules_dict
+                      |> Enum.filter(fn({_k,v}) ->
+                          v |> Enum.any?(fn({_num_bags, search_id}) ->
+                            bag_id == search_id
+                          end)
+                        end)
+                      |> Enum.map(&elem(&1, 0))
+    parent_keys
+      |> Enum.map(&BagRules.findParents(rules_dict, &1))
+      |> Enum.reduce(parent_keys, fn(x, acc) -> Enum.uniq(x ++ acc) end)
+  end
+
+  def findChildrenCounts(rules_dict, bag_id) do
+
+  end
+end
+
+rules_dict = lines
+  |> Enum.map(&BagRules.add/1)
+  |> Enum.reduce(%{}, fn({k, v}, map) ->
+      Map.put(map, k, v)
+    end)
+#result = BagRules.add(List.first(lines))
+#IO.inspect(rules_dict)
+result = BagRules.findParents(rules_dict,"shiny gold")
+IO.inspect(result)
+IO.inspect(result |> Enum.count)
+
+#a = []              #  []
+#b = ["foo" | a]     #  ["foo" | []]
+#c = ["bar" | b]     #  ["bar" | ["foo" | []]]
