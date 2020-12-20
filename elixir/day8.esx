@@ -1,0 +1,48 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/8/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+lines = String.split(List.to_string(body), "\n", trim: true)
+#IO.inspect(lines)
+
+defmodule Processor do
+  def run(instructions, acc, processed_instr, curr_idx) do
+    cmd = Enum.at(instructions, curr_idx)
+
+    if curr_idx == length(instructions) do
+      {acc, true}
+    else
+      if Enum.any?(processed_instr, fn(x) -> x == curr_idx end) do
+            {acc, false}
+      else
+        [op, num] = String.split(cmd, " ")
+        case [op, Integer.parse(num)] do
+          #proceed to next instruction
+          ["nop", _] -> Processor.run(instructions, acc, processed_instr ++ [curr_idx], curr_idx + 1)
+          #add amnt to accumulator
+          ["acc", {amnt, _}] -> Processor.run(instructions, acc + amnt, processed_instr ++ [curr_idx], curr_idx + 1)
+            #move to instruction amnt away
+          ["jmp", {amnt, _}] -> Processor.run(instructions, acc, processed_instr ++ [curr_idx], curr_idx + amnt)
+        end
+      end
+    end
+  end
+end
+
+#result = Processor.run(lines, 0, [], 0)
+#IO.inspect(result)
+test_results = Enum.with_index(lines) |> Enum.map(fn({cmd, idx}) ->
+    test_instr = case String.split(cmd, " ") do
+      ["nop", num] -> List.replace_at(lines, idx, "jmp #{num}")
+      ["jmp", num] -> List.replace_at(lines, idx, "nop #{num}")
+      _ -> lines
+    end
+    Processor.run(test_instr, 0, [], 0)
+  end)
+test_results |> Enum.filter(fn({_value, result}) -> result end) |> IO.inspect
