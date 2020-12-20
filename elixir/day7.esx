@@ -39,6 +39,29 @@ defmodule BagRules do
   end
 
   def findChildrenCounts(rules_dict, bag_id) do
+    children = Map.get(rules_dict, bag_id)
+
+      children |> Enum.map(fn({num, id}) -> num * BagRules.findChildrenCounts(rules_dict, id) end)
+        |> Enum.reduce(1, fn(x, acc) -> x + acc end)
+    #parent + num_child * child...
+      #child + *num_child * child...
+     # private static long numBags(List<List<String>> trimmedText, String descriptor) {
+     #   long totalBags = 1;
+     #   for (List<String> line : trimmedText) {
+     #    if (line.get(0).equals(descriptor)) {
+     #      if (line.get(1).equals("no other")) {
+     #        return 1;
+     #      } else {
+     #        for (int i = 1; i < line.size(); i++) {
+     #          long num = Long.parseLong(line.get(i).substring(0, 1));
+     #          String newDescriptor = line.get(i).substring(2);
+     #          totalBags += num * numBags(trimmedText, newDescriptor);
+     #        }
+     #      }
+     #    }
+     #  }
+     #  return totalBags;
+     #}
 
   end
 end
@@ -53,6 +76,10 @@ rules_dict = lines
 result = BagRules.findParents(rules_dict,"shiny gold")
 IO.inspect(result)
 IO.inspect(result |> Enum.count)
+
+result2 = BagRules.findChildrenCounts(rules_dict, "shiny gold") - 1
+IO.inspect("result2")
+IO.inspect(result2)
 
 #a = []              #  []
 #b = ["foo" | a]     #  ["foo" | []]
