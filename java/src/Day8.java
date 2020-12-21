@@ -6,7 +6,7 @@ public class Day8 {
 
 	public static void main(String[] args) throws Exception {
 
-		StringBuffer data = ReadURL.getWebData(8, "patrick");
+		StringBuffer data = ReadURL.getWebData(8, "jason");
 		String[] answerSets = data.toString().split("\\n");
 
 		System.out.println("first answer = " + infiniteLoop(answerSets)[0]);

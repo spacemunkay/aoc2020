@@ -8,7 +8,7 @@ public class Day7 {
 
 	public static void main(String[] args) throws Exception {
 
-		StringBuffer data = ReadURL.getWebData(7, "jason");
+		StringBuffer data = ReadURL.getWebData(7, "patrick");
 		String[] answerSets = data.toString().split("\\n");
 
 		Set<String> oldDescriptors = new HashSet<String>();
