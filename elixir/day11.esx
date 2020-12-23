@@ -1,0 +1,72 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/11/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+sample = 'L.LL.LL.LL
+LLLLLLL.LL
+L.L.L..L..
+LLLL.LL.LL
+L.LL.LL.LL
+L.LLLLL.LL
+..L.L.....
+LLLLLLLLLL
+L.LLLLLL.L
+L.LLLLL.LL'
+
+lines = String.split(List.to_string(sample), "\n", trim: true)
+IO.inspect(lines)
+
+defmodule Room do
+  # y row, x col
+  def hash_map(lines) do
+    rows = Enum.with_index(lines)
+    Enum.reduce(rows, %{}, fn({row, y_idx}, map_acc) ->
+      cols = String.split(row,"") |> Enum.with_index
+      x_map = Enum.reduce(cols, %{}, fn({spot, x_idx}, x_map_acc) ->
+        Map.put(x_map_acc, x_idx, spot)
+      end)
+      Map.put(map_acc, y_idx, x_map)
+    end)
+  end
+
+  def get_neighbors_for(map, x,y) do
+    n_pos = [[-1, -1], [0, -1], [1, -1],
+             [-1, 0]          , [1, 0],
+             [-1, 1],  [0, 1],  [1, 1] ]
+    n_states = n_pos |> Enum.map(fn([x,y]) ->
+      map |> Map.get(y, %{}) |> Map.get(x, ".")
+    end)
+  end
+
+  def occupied_neighbors_count(map, x, y) do
+    Room.get_neighbors_for(map, x,y) |> Enum.filter(fn(s) -> s == "#" end) |> Enum.count
+  end
+
+  def update(map) do
+    Enum.map(map, fn({y_idx, x_map}) ->
+      Enum.map(x_map, fn({x_idx, spot}) ->
+        case spot do
+          "L" -> if occupied_neighbors_count(map, x_idx, y_idx) <= 0, do: "#", else: spot
+          "#" -> if occupied_neighbors_count(map, x_idx, y_idx) >= 4, do: "L", else: spot
+          _ -> spot
+        end
+      end)
+    end)
+  end
+
+ #def occupied_neighbors?(map, x, y) do
+ #  Enum.member?(Room.get_neighbors_for(map, x,y),"#")
+ #end
+
+ #def crowded?(map, x, y) do
+ #  Room.get_neighbors_for(map, x,y) |> Enum.filter(fn(s) -> s == "#")
+ #end
+end
+
+IO.inspect(Room.update(Room.hash_map(lines)))
