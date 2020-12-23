@@ -1,0 +1,65 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/9/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+lines = String.split(List.to_string(body), "\n", trim: true)
+#IO.inspect(lines)
+
+defmodule Validator do
+  def run(all_numbers) do
+    nxt_set = Enum.slice(all_numbers, 0, 25)
+    remaining_set = Enum.slice(all_numbers, 25, length(all_numbers))
+    [ head_check | _ ] = remaining_set
+    valid_numbers = nxt_set |> Enum.flat_map(fn(n) ->
+        Enum.map(all_numbers, fn(nn) ->
+          if nn == n do
+            -1
+          else
+            nn + n
+          end
+        end)
+      end)
+    #IO.inspect(valid_numbers)
+    if Enum.member?(valid_numbers, head_check) do
+      remaining = Enum.slice(all_numbers, 1, length(all_numbers))
+      Validator.run(remaining)
+    else
+      head_check
+    end
+  end
+
+  def locate_weakness(all_numbers, set_numbers, break_number, acc) do
+    [head | remaining_numbers] = set_numbers
+    sum = head + acc
+    if sum > break_number do
+      new_set = Enum.slice(all_numbers, 1, length(all_numbers))
+      Validator.locate_weakness(new_set, new_set, break_number, 0)
+    else
+      if sum == break_number do
+        end_idx = Enum.find_index(all_numbers, fn(n) -> n == head end)
+        result_set = Enum.slice(all_numbers, 0, end_idx+1)
+        min = Enum.min(result_set)
+        max = Enum.max(result_set)
+        min + max
+      else
+        Validator.locate_weakness(all_numbers, Enum.slice(set_numbers, 1, length(set_numbers)), break_number, sum)
+      end
+    end
+
+  end
+
+
+end
+
+parsed_numbers = lines |> Enum.map(&Integer.parse/1) |> Enum.map(&elem(&1, 0))
+#IO.inspect(parsed_numbers)
+result = Validator.run(parsed_numbers)
+IO.inspect(result)
+result2 = Validator.locate_weakness(parsed_numbers, parsed_numbers, result, 0)
+IO.inspect(result2)

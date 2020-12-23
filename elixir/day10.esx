@@ -1,0 +1,121 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/10/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+sample = '16
+10
+15
+5
+1
+11
+7
+19
+6
+12
+4'
+
+lines_wo_zero = String.split(List.to_string(body), "\n", trim: true)
+lines = ["0"] ++ lines_wo_zero
+
+IO.inspect(lines)
+
+parsed_nums = lines
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.sort
+
+max = Enum.max(parsed_nums) + 3
+all_nums = parsed_nums ++ [max]
+
+#all_nums |> Enum.reverse
+#  |>
+
+chunked_nums = all_nums |> Enum.chunk( 2, 1, nil)
+distribution = Enum.map(chunked_nums, fn([a, b]) ->
+  b - a
+end)
+
+IO.inspect(all_nums)
+IO.inspect(distribution)
+
+# PART 1
+#IO.inspect(all_nums)
+# chunked_nums = all_nums |> Enum.chunk( 2, 1, nil)
+# distribution = Enum.map(chunked_nums, fn([a, b]) ->
+#   b - a
+# end)
+#freqs = Enum.frequencies(distribution)
+#IO.inspect(freqs)
+# IO.inspect(Map.get(freqs, 1) * Map.get(freqs, 3))
+
+
+#fun(map, rlist):
+  #pop
+  #if rlist.empty
+    #map.put(head,1)
+    #return 1
+  #else
+    #next_nodes = [rlist[0],rlist[1],rlist[2]].filter(fn(x) -> head-x <=3)
+    #map.put(head,sum(next_nodes))
+    #fun(map, rlist)
+
+    #
+    #[0, 1, 4, 5, 6, 7, 10, 11, 12, 15, 16, 19, 22]
+#score 0 = score 1
+#score 1 = score 4
+#score 4 = score 5 + score 6 + score 7
+#score 5 = score 6 + score 7
+#score 6 = score 7
+#score 7 = score 10
+#score 10 = score 11 + score 12
+#score 11 = score 12
+#...
+#score of [n] = sum([n+1,n+2].filter(fn(x) -> x - [n] <= 3))
+
+defmodule Fib do
+  def next(list) do
+    sum = Enum.sum(Enum.take(list, -3))
+    list ++ [sum]
+  end
+
+  def calc(list, times) do
+    if times > 0 do
+      Fib.calc(Fib.next(list), times - 1)
+    else
+      list
+    end
+  end
+
+  def score(list) do
+    result = List.last(Fib.calc([1], length(list)))
+   #case result do
+   #  8 -> 7
+   #  16 -> 13
+   #  32 -> 24
+   #  64 -> 44
+   #  _ -> result
+   #end
+  end
+end
+
+#IO.inspect Fib.score([1])
+
+chunks = Enum.chunk_by(distribution, fn(n) -> n == 3  end)
+#IO.inspect(chunks)
+filtered_chunks = Enum.filter(chunks, fn(chunk) -> !Enum.member?(chunk, 3) end)
+#IO.inspect(filtered_chunks)
+scores = Enum.map(filtered_chunks, &Fib.score/1)
+IO.inspect(scores)
+result = scores  |> Enum.reduce(1, fn(n, acc) -> n * acc end)
+IO.inspect(result)
+
+
+# IO.inspect Fib.score([1])
+# IO.inspect Fib.score([1,1])
+# IO.inspect Fib.score([1,1,1])
+# IO.inspect Fib.score([1,1,1,1])
