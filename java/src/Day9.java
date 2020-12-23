@@ -6,7 +6,7 @@ public class Day9 {
 
 	public static void main(String[] args) throws Exception {
 
-		StringBuffer data = ReadURL.getWebData(9, "patrick");
+		StringBuffer data = ReadURL.getWebData(9, "jason");
 		String dataString = data.toString();
 
 		long firstAnswer = checkSums(dataString);

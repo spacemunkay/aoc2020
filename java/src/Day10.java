@@ -8,7 +8,7 @@ public class Day10 {
 	
 	public static void main(String[] args) throws Exception {
 
-		StringBuffer data = ReadURL.getWebData(10, "patrick");
+		StringBuffer data = ReadURL.getWebData(10, "jason");
 		String dataString = data.toString();
 		List<Integer> numbers = new ArrayList<Integer>();
 		Scanner s = new Scanner(dataString);
