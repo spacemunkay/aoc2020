@@ -51,11 +51,11 @@ public class Day13 {
 		}
 
 		BusRunner[] threads = new BusRunner[intervals.size() - 1];
-		long[] answers = new long[threads.length];
+		List<Long> answers = new ArrayList<Long>();
 		for (int i = 0; i < threads.length; i++) {
 			threads[i] = new BusRunner(intervals.get(i), intervals.get(i + 1), maxIdx, buses);
 			threads[i].start();
-			answers[i] = threads[i].retVal;
+			answers.add(threads[i].retVal);
 		}
 		for (int i = 0; i < threads.length; i++) {
 			try {
@@ -105,7 +105,7 @@ public class Day13 {
 			this.max = max;
 			this.maxIdx = maxIdx;
 			this.buses = buses;
-			retVal = -1;
+			retVal = 0;
 		}
 
 		public void run() {
