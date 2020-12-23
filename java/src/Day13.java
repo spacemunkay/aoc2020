@@ -51,7 +51,7 @@ public class Day13 {
 		}
 
 		BusRunner[] threads = new BusRunner[intervals.size() - 1];
-		List<Long> answers = new ArrayList<Long>();
+		//List<Long> answers = new ArrayList<Long>();
 		for (int i = 0; i < threads.length; i++) {
 			threads[i] = new BusRunner(intervals.get(i), intervals.get(i + 1), maxIdx, buses);
 			threads[i].start();
@@ -67,7 +67,7 @@ public class Day13 {
 
 		for (long answer : answers) {
 			System.out.println("answer: " + answer);
-			if (answer != -1) {
+			if (answer != 0) {
 				System.out.println("Used threads");
 				return answer;
 			}
@@ -92,6 +92,8 @@ public class Day13 {
 		return time;
 
 	}
+
+	public static List<Long> answers = new LinkedList<Long>();
 
 	public static class BusRunner extends Thread {
 		long min;
@@ -123,6 +125,8 @@ public class Day13 {
 				}
 
 			}
+			// Wrap in mutex?
+			answers.add(retVal);
 			retVal = time;
 			return;
 		}
