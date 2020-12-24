@@ -5,7 +5,7 @@ public class Day11 {
 	private static char[][] afterGrid;
 
 	public static void main(String[] args) throws Exception {
-		StringBuffer data = ReadURL.getWebData(11, "patrick");
+		StringBuffer data = ReadURL.getWebData(11, "jason");
 		String dataString = data.toString();
 		
 		System.out.println("first answer = " + getAnswer(dataString, false));
