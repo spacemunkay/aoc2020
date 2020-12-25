@@ -6,21 +6,21 @@ public class Day13 {
 	public static void main(String[] args) throws Exception {
 		StringBuffer sb = ReadURL.getWebData(13, "patrick");
 		String data = sb.toString();
-				
+
 		Scanner s = new Scanner(data);
 		long timestamp = s.nextLong();
 		s.nextLine();
 		String[] busArray = s.nextLine().split(",");
 		s.close();
-		
+
 		List<Long> buses = new ArrayList<Long>();
 		for (String bus : busArray) {
 			if (!bus.equals("x")) {
 				buses.add(Long.parseLong(bus));
 			}
 		}
-		
-		System.out.println("first answer = " + nextArrival(buses, timestamp));		
+
+		System.out.println("first answer = " + nextArrival(buses, timestamp));
 		System.out.println("second answer = " + consecutiveMinutes(busArray));
 	}
 
