@@ -9,11 +9,7 @@ public class Day14 {
 	public static void main(String[] args) throws Exception {
 		StringBuffer sb = ReadURL.getWebData(14, "patrick");
 		String data = sb.toString();
-		String test = "mask = 000000000000000000000000000000X1001X\n" + 
-				"mem[42] = 100\n" + 
-				"mask = 00000000000000000000000000000000X0XX\n" + 
-				"mem[26] = 1";
-		String[] lines = test.split("\n");
+		String[] lines = data.split("\n");
 
 		
 		clearMemValues();
@@ -22,8 +18,7 @@ public class Day14 {
 		
 		clearMemValues();
 		applyBitmask(lines, false);
-		System.out.println("second answer = " + sumAddresses());
-		//1342803601300 = "too low"
+		System.out.println("second answer = " + sumAddresses());		
 		
 
 	}
@@ -51,22 +46,18 @@ public class Day14 {
 				int address = Integer.parseInt(splitLine[0].substring(4, splitLine[0].length() - 1));
 				long value = Long.parseLong(splitLine[1]);
 				if (first) setMemory(address, value, mask);
-				else setMemory2(address, value, mask);
+				else setMemory2(combine(address, mask), value);
 			}
 		}
 
 	}
 
-	private static void setMemory2(long address, long value, String mask) {
-		mask = combine(address, mask);
-		//System.out.println(mask);
+	private static void setMemory2(String mask, long value) {
 		if (!mask.contains("X")) {
-			//address |= convertBinary(mask);
-			//System.out.println("Setting " + value + " at " + address);
 			memValues.put(convertBinary(mask), value);
 		} else {
-			setMemory2(address, value, mask.replaceFirst("X", "0"));
-			setMemory2(address, value, mask.replaceFirst("X", "1"));
+			setMemory2(mask.replaceFirst("X", "0"), value);
+			setMemory2(mask.replaceFirst("X", "1"), value);
 		}
 		return;
 	}
