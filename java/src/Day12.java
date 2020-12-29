@@ -15,7 +15,7 @@ public class Day12 {
 	};
 
 	public static void main(String[] args) throws Exception {
-		StringBuffer sb = ReadURL.getWebData(12, "patrick");
+		StringBuffer sb = ReadURL.getWebData(12, "jason");
 		String data = sb.toString();
 
 		Ferry ferry = new Ferry(Direction.E, 0, 0);
