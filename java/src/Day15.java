@@ -7,8 +7,9 @@ public class Day15 {
 	private static final int FIRST_ATTEMPT = 2020;
 	private static final int SECOND_ATTEMPT = 30000000;
 
-	public static void main(String[] args) {
-		String data = "0,1,4,13,15,12,16";
+	public static void main(String[] args) throws Exception {
+		StringBuffer sb = ReadURL.getWebData(15, "jason");
+		String data = sb.toString().trim();
 
 		String[] startNumbers = data.split(",");
 
