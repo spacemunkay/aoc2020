@@ -11,40 +11,32 @@ public class Day16 {
 	public static void main(String[] args) throws Exception {
 		StringBuffer sb = ReadURL.getWebData(16, "patrick");
 		String data = sb.toString();
-		String test = "class: 0-1 or 4-19\n" + 
-				"row: 0-5 or 8-19\n" + 
-				"seat: 0-13 or 16-19\n" + 
-				"\n" + 
-				"your ticket:\n" + 
-				"11,12,13\n" + 
-				"\n" + 
-				"nearby tickets:\n" + 
-				"3,9,18\n" + 
-				"15,1,5\n" + 
-				"5,14,9";
 
-		String[] info = test.split("\n\n");
+		String[] info = data.split("\n\n");
 		String[] ranges = info[0].split("\n");
 		String myTicket = info[1].split("\n")[1];
 		int numCols = myTicket.split(",").length;
 		String[] nearbyTicketsWithHeader = info[2].split("\n");
 		String[] nearbyTickets = Arrays.copyOfRange(nearbyTicketsWithHeader, 1, nearbyTicketsWithHeader.length);
 		Set<String> validTickets = new HashSet<String>();
+		validTickets.add(myTicket);
 		Set<Integer> totalRange = setRange(ranges);
 		System.out.println("first answer = " + findErrorRate(totalRange, nearbyTickets, validTickets));
-		System.out.println("second answer = " + validateTicket(myTicket, ranges, validTickets, numCols, "class"));
-
+		System.out.println("second answer = " + validateTicket(myTicket, ranges, validTickets, numCols, "departure"));
 	}
 
-	private static int validateTicket(String myTicket, String[] ranges, Set<String> validTickets, int numCols, String keyword) {
+	private static long validateTicket(String myTicket, String[] ranges, Set<String> validTickets, int numCols, String keyword) {
 		List<Integer> ticketValues = new ArrayList<Integer>();
 		String[] ticketValuesString = myTicket.split(",");
 		for (String value : ticketValuesString) {
 			ticketValues.add(Integer.parseInt(value));
 		}
-
-		int product = 1;
+		long product = 1;
+		
+		// Maps fields as keys to column index
 		Map<String, Integer> fieldsByIndex = getFields(ranges, validTickets, numCols);
+		
+		// Multiply ticket values which correspond to the desired field(s) 
 		for (String key : fieldsByIndex.keySet()) {
 			if (key.contains(keyword)) {
 				product *= ticketValues.get(fieldsByIndex.get(key));
@@ -57,7 +49,7 @@ public class Day16 {
 		Map<String, Integer> fieldsByIndex = new HashMap<String, Integer>();
 		Map<String, List<List<Integer>>> fieldsValidColumns = new HashMap<String, List<List<Integer>>>();
 		List<List<Integer>> columns = splitTickets(validTickets, numCols);
-		for (String field : fieldsByIndex.keySet()) {
+		for (String field : ranges) {
 			mapColumns(field, columns, fieldsValidColumns);
 		}
 		reduceColumns(fieldsValidColumns, fieldsByIndex, columns);
@@ -66,6 +58,7 @@ public class Day16 {
 
 	private static void reduceColumns(Map<String, List<List<Integer>>> fieldsValidColumns,
 			Map<String, Integer> fieldsByIndex, List<List<Integer>> columns) {
+
 		while (fieldsByIndex.size() < columns.size()) {
 			for (String key : fieldsValidColumns.keySet()) {
 				if (fieldsValidColumns.get(key).size() == 1) {
@@ -92,7 +85,9 @@ public class Day16 {
 					addColumn = false;
 				}
 			}
-			if (addColumn) fieldsValidColumns.get(field).add(column);
+			if (addColumn)  {
+				fieldsValidColumns.get(field).add(column);
+			}
 		}
 	}
 
@@ -127,7 +122,6 @@ public class Day16 {
 	}
 
 	private static int findErrorRate(Set<Integer> totalRange, String[] nearbyTickets, Set<String> validTickets) {
-		// System.out.println(totalRange.toString());
 		int errorRateSum = 0;
 		for (String ticket : nearbyTickets) {
 			boolean valid = true;
