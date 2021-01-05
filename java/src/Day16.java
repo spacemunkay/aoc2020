@@ -9,7 +9,7 @@ import java.util.Set;
 public class Day16 {
 
 	public static void main(String[] args) throws Exception {
-		StringBuffer sb = ReadURL.getWebData(16, "patrick");
+		StringBuffer sb = ReadURL.getWebData(16, "jason");
 		String data = sb.toString();
 
 		String[] info = data.split("\n\n");
