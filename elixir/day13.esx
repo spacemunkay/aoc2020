@@ -1,0 +1,34 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/13/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+sample='
+939
+7,13,x,x,59,x,31,19
+'
+
+lines = String.split(List.to_string(body), "\n", trim: true)
+d_time = List.first(lines) |> String.to_integer
+buses = String.split(List.last(lines), ",", trim: true) |> Enum.reject(&(&1=="x")) |> Enum.map(&String.to_integer/1)
+
+defmodule Calc do
+  def run(d_time, m_time, buses) do
+    results = Enum.map(buses, fn(bus) ->
+      {rem(m_time, bus) == 0, bus }
+    end) |> Enum.filter(fn({status, bus}) -> status end)
+    if(Enum.empty?(results)) do
+      run(d_time, m_time + 1, buses)
+    else
+      {_, bus} = List.first(results)
+      (m_time - d_time) * bus
+    end
+  end
+end
+
+IO.inspect(Calc.run(d_time, d_time, buses))

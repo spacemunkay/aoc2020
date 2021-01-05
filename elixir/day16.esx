@@ -1,0 +1,154 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/16/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+sample1='class: 1-3 or 5-7
+row: 6-11 or 33-44
+seat: 13-40 or 45-50
+
+your ticket:
+7,1,14
+
+nearby tickets:
+7,3,47
+40,4,50
+55,2,20
+38,6,12'
+sample2='class: 0-1 or 4-19
+row: 0-5 or 8-19
+seat: 0-13 or 16-19
+
+your ticket:
+11,12,13
+
+nearby tickets:
+3,9,18
+15,1,5
+5,14,9'
+
+#lines = String.split(List.to_string(body), "\n", trim: true)
+categories = String.split(List.to_string(body), "\n\n", trim: true)
+field_lines = List.first(categories) |> String.split("\n", trim: true)
+[_header | your_ticket_lines] = Enum.at(categories, 1)|> String.split("\n", trim: true)
+[_header | nearby_ticket_lines] = List.last(categories) |> String.split("\n", trim: true)
+IO.inspect(field_lines)
+IO.inspect(your_ticket_lines)
+IO.inspect(nearby_ticket_lines)
+
+defmodule Parser do
+  def parse_fields(lines) do
+    lines |> Enum.map(fn(line) ->
+      [field | remaining_values] = line |> String.split(": ", trim: true)
+      ranges = remaining_values |> List.first |> String.split(" or ", trim: true)
+      parsed_ranges = ranges |> Enum.map(fn(range) ->
+        [min, max] = range |> String.split("-", trim: true) |> Enum.map(&String.to_integer/1)
+      end)
+      {field, parsed_ranges}
+    end)
+  end
+
+  def in_ranges?(number, parsed_fields) do
+    Enum.any?(parsed_fields, fn({_field_name, ranges}) ->
+      ranges |> Enum.any?(fn([r_min, r_max]) -> number >= r_min and number <= r_max end)
+    end)
+  end
+
+  def which_fields?(number, parsed_fields) do
+    Enum.filter(parsed_fields, fn({field_name, field_ranges}) ->
+      field_ranges |> Enum.any?(fn([r_min, r_max]) -> number >= r_min and number <= r_max end)
+    end)
+  end
+
+  def part1(parsed_fields, nearby_tickets) do
+    Enum.reduce(nearby_tickets, 0, fn(ticket_line, acc) ->
+      ticket_numbers = String.split(ticket_line, ",", trim: true) |> Enum.map(&String.to_integer/1)
+      total = ticket_numbers |> Enum.reduce(0, fn(number, sum) ->
+        num = if in_ranges?(number, parsed_fields) do
+          0
+        else
+          number
+        end
+        num + sum
+      end)
+      total + acc
+    end)
+  end
+
+  def ticket_numbers(ticket_lines) do
+    Enum.map(ticket_lines, fn(ticket_line) ->
+      String.split(ticket_line, ",", trim: true) |> Enum.map(&String.to_integer/1)
+    end)
+  end
+
+  def valid_tickets(parsed_fields, tickets) do
+    tickets |> Enum.filter(fn(ticket_numbers) ->
+      Enum.all?(ticket_numbers, fn(number) ->
+        in_ranges?(number, parsed_fields)
+      end)
+    end)
+  end
+
+  def part2(parsed_fields, your_tickets, nearby_tickets) do
+    tickets = ticket_numbers(your_tickets ++ nearby_tickets)
+    all_tickets = valid_tickets(parsed_fields, tickets)
+    cols = parsed_fields |> Enum.with_index |> Enum.map(&(elem(&1, 1)))
+    all_column_possible_fields = Enum.map(cols, fn(col_idx) ->
+      #IO.inspect(determine_possible_fields(all_tickets, parsed_fields, col_idx))
+      possible_fields_for_column(all_tickets, parsed_fields, col_idx)
+    end)
+    deduce_each_column_field(all_column_possible_fields, []) |> Enum.filter(fn({col_idx, field}) ->
+      String.match?(field, ~r/departure/)
+      #String.match?(field, ~r/row/)
+    end) |> Enum.reduce(1, fn({col_idx, field}, acc) ->
+      ticket_nums =  your_tickets |> List.first |> String.split(",", trim: true) |> Enum.map(&String.to_integer/1)
+      Enum.at(ticket_nums, col_idx) * acc
+    end)
+  end
+
+  def deduce_each_column_field(all_column_possible_fields, solved) do
+    if length(solved) == length(all_column_possible_fields) do
+      solved
+    else
+      solved_col = Enum.reduce(all_column_possible_fields, [], fn({col_idx, possible_fields}, acc) ->
+        if length(possible_fields) == 1 do
+          acc ++ [{col_idx, List.first(possible_fields)}]
+        else
+          acc
+        end
+      end) |> List.first
+      remaining_column_possible_fields = Enum.map(all_column_possible_fields, fn({col_idx, possible_fields}) ->
+        {_solved_col_idx, solved_field} = solved_col
+        {col_idx, List.delete(possible_fields, solved_field)}
+      end)
+      deduce_each_column_field(remaining_column_possible_fields, solved ++ [solved_col])
+    end
+  end
+
+  def possible_fields_for_column(all_tickets, parsed_fields, col_idx) do
+    fields = Enum.reduce(determine_possible_fields(all_tickets, parsed_fields, col_idx), %{}, fn(possible_ticket_fields, acc_dict) ->
+      Enum.reduce(possible_ticket_fields, acc_dict, fn({field_name, field_ranges}, acc_dict2) ->
+        Map.update(acc_dict2, field_name, 1, fn(previous_value) -> previous_value + 1 end)
+      end)
+    end) |> Enum.filter(fn({_k,v}) -> v == length(all_tickets) end) |> Enum.map(&(elem(&1, 0)))# |> Enum.map(
+    {col_idx, fields}
+  end
+
+  def determine_possible_fields(tickets, parsed_fields, col_idx) do
+    tickets |> Enum.map(fn(ticket) ->
+       num_value = Enum.at(ticket, col_idx)
+       which_fields?(num_value, parsed_fields)
+    end)
+  end
+
+
+end
+
+#IO.inspect(Parser.parse_fields(field_lines))
+#IO.inspect(Parser.part1(Parser.parse_fields(field_lines), nearby_ticket_lines))
+IO.inspect(Parser.part2(Parser.parse_fields(field_lines), your_ticket_lines, nearby_ticket_lines))

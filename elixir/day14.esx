@@ -1,0 +1,113 @@
+use Bitwise
+
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/14/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+sample='
+mask = 000000000000000000000000000000X1001X
+mem[42] = 100
+mask = 00000000000000000000000000000000X0XX
+mem[26] = 1
+'
+
+lines = String.split(List.to_string(body), "\n", trim: true)
+#IO.inspect(lines)
+
+defmodule Machine do
+  def process(lines, memory, [zero_and_mask, one_or_mask]) do
+    if Enum.empty?(lines) do
+      Map.values(memory) |> Enum.reduce(0, &(&1 + &2))
+    else
+      [cmd | remaining] = lines
+      mem_result = Regex.run(~r/mem\[(\d+)\] = (\d+)/, cmd)
+      if mem_result do
+        [_, address, value] = mem_result
+        result = (String.to_integer(value) &&& zero_and_mask) ||| one_or_mask
+
+        process(remaining, Map.put(memory, address, result), [zero_and_mask, one_or_mask])
+      else
+        [_, "mask", full_mask] = Regex.run(~r/(mask) = ([01X]+)/, cmd)
+        zero_and_mask = String.replace(full_mask, "X", "1") |> BitStuff.convert
+        one_or_mask = String.replace(full_mask, "X", "0") |> BitStuff.convert
+
+        process(remaining, memory, [zero_and_mask, one_or_mask])
+      end
+    end
+  end
+
+  def process2(lines, memory, [base_mask, or_masks]) do
+     if Enum.empty?(lines) do
+      #IO.inspect(memory)
+      Map.values(memory) |> Enum.reduce(0, &(&1 + &2))
+     else
+      [cmd | remaining] = lines
+      mem_result = Regex.run(~r/mem\[(\d+)\] = (\d+)/, cmd)
+      if mem_result do
+        [_, address, value] = mem_result
+        #IO.inspect(address)
+        #IO.inspect(base_mask)
+        base_address = String.to_integer(address) ||| base_mask
+        #IO.inspect(base_address)
+        addresses = List.flatten(addresses(base_address, or_masks))
+        new_memory = Enum.reduce(addresses, memory, fn(addy, acc_mem) ->
+          Map.put(acc_mem, addy, String.to_integer(value))
+        end)
+        #IO.inspect(new_memory)
+        process2(remaining, new_memory, [base_mask, or_masks])
+      else
+        [_, "mask", full_mask] = Regex.run(~r/(mask) = ([01X]+)/, cmd)
+        new_base_mask = String.replace(full_mask, "X", "0") |> BitStuff.convert
+        new_or_masks = or_masks(full_mask)
+
+        process2(remaining, memory, [new_base_mask, new_or_masks])
+      end
+     end
+  end
+
+  def or_masks(full_mask) do
+    x_idxs = Regex.scan(~r/X/, full_mask, return: :index) |> Enum.map(&(elem(List.first(&1), 0)))
+    x_shifts = x_idxs |> Enum.map(&( (String.length(full_mask) - 1) - &1))
+    x_shifts |> Enum.map(&bsl(1, &1))
+  end
+
+  def addresses(value, or_masks) do
+    if Enum.empty?(or_masks) do
+      #IO.puts(value)
+      [value]
+    else
+      [next_or_mask | remaining] = or_masks
+      [addresses(value ||| next_or_mask, remaining),
+        addresses(value &&& ~~~next_or_mask, remaining)]
+    end
+  end
+end
+
+defmodule BitStuff do
+  def convert(rstring) do
+    #https://hexdocs.pm/elixir/master/String.html
+    rchars = String.graphemes(rstring)
+    chars = Enum.reverse(rchars)
+    chars_w_index = Enum.with_index(chars, 0)
+
+    Enum.reduce(chars_w_index, 0, fn pair, acc ->
+      {char, idx} = pair
+      bit = case char do
+        "1" -> 1 <<< idx
+        _ -> 0
+      end
+      acc ||| bit
+    end )
+  end
+end
+
+#IO.inspect(Machine.process(lines, %{}, [0,0]))
+#IO.inspect(Machine.or_masks("X01X"))
+#IO.inspect(Machine.addresses(7, [8, 1]))
+IO.inspect(Machine.process2(lines, %{}, [0,[]]))

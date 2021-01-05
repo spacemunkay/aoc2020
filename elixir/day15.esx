@@ -1,0 +1,45 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/15/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+sample='
+3,1,2
+'
+
+
+
+lines = String.split(List.to_string(body), "\n", trim: true)
+IO.inspect(lines)
+
+defmodule Game do
+
+  def play(line, stop_num)do
+    run(String.split(line, ",") |> Enum.reverse, stop_num)
+  end
+
+  def run(list,stop_num) do
+    turn_num = length(list)
+    if turn_num == stop_num do
+      List.first(list )
+    else
+      #check turn_num against number of turns
+      [last_num | all_previous] = list
+      if Enum.member?(all_previous, last_num) do
+        #segments = Enum.split(all_previous, last_num)
+        last_idx = Enum.find_index(all_previous, &(&1 == last_num))
+        result = last_idx + 1
+        run(["#{result}"| list ], stop_num)
+      else
+        run(["0" | list], stop_num)
+      end
+    end
+  end
+end
+
+IO.inspect(Game.play(List.first(lines), 30000000))

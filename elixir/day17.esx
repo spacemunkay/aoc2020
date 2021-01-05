@@ -1,0 +1,27 @@
+{:ok, sessionkey} = File.read("input/jason")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/16/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+lines = String.split(List.to_string(body), "\n", trim: true)
+IO.inspect(lines)
+
+
+defmodule Pocket do
+  def get_neighbors_for(map, xspot,yspot) do
+    n_pos = [[-1, -1, 0], [0, -1, 0], [1, -1, 0],
+             [-1, 0, 0]             , [1, 0, 0],
+             [-1, 1, 0],  [0, 1, 0],  [1, 1, 0] ]
+    above_pos = [[-1, -1, 0], [0, -1, 0], [1, -1, 0],
+             [-1, 0, 0]             , [1, 0, 0],
+             [-1, 1, 0],  [0, 1, 0],  [1, 1, 0] ]
+    n_pos |> Enum.map(fn([x,y]) ->
+      map |> Map.get(yspot+y, %{}) |> Map.get(xspot+x, nil)
+    end)
+  end
+end
