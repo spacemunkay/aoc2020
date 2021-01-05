@@ -4,15 +4,39 @@ import java.util.List;
 public class Day17 {
 
 	public static void main(String[] args) throws Exception {
-		StringBuffer sb = ReadURL.getWebData(17, "patrick");
-		String data = sb.toString();
+		//StringBuffer sb = ReadURL.getWebData(17, "patrick");
+		//String data = sb.toString();
 		String test = ".#.\n" + "..#\n" + "###";
 		String single = "#";
 		String triple = "###\n###\n###\n\n###\n#.#\n###\n\n###\n###\n###";
 		List<List<List<Character>>> cube = createCube(test);
-		cube = nextCycle(cube);
-		printCube(cube);
+		cube = cycleMulti(cube, 6);
 
+	}
+
+	private static List<List<List<Character>>> cycleMulti(List<List<List<Character>>> cube, int cycles) {
+		System.out.println("Before any cycles:\n");
+		printCube(cube);
+		for (int i = 1; i <= cycles; i++) {
+			System.out.println("After " + i + " cycles:\n");
+			cube = nextCycle(cube);
+			System.out.println(countActive(cube));
+		}
+		return cube;
+	}
+
+	private static int countActive(List<List<List<Character>>> cube) {
+		int sum = 0;
+		for (int i = 0; i < cube.size(); i++) {
+			for (int j = 0; j < cube.get(i).size(); j++) {
+				for (int k = 0; k < cube.get(i).get(j).size(); k++) {
+					if (cube.get(i).get(j).get(k) == '#') {
+						sum++;
+					}
+				}
+			}
+		}
+		return sum;
 	}
 
 	private static List<List<List<Character>>> nextCycle(List<List<List<Character>>> cube) {
