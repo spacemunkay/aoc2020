@@ -1,0 +1,60 @@
+IEx.configure(inspect: [charlists: :as_lists])
+# {:ok, sessionkey} = File.read("input/jason")
+# #IO.inspect sessionkey
+
+# url = "https://adventofcode.com/2020/day/16/input"
+# Application.ensure_all_started(:inets)
+# Application.ensure_all_started(:ssl)
+
+# {:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+#   :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+sample = '1 + (2 * 3) + (4 * (5 + 6))'
+sample = '1 + 2 * 3 + 4 * 5 + 6'
+
+lines = String.split(List.to_string(sample), "\n", trim: true)
+IO.inspect(lines)
+
+defmodule FunnyMath do
+  def do_homework(lines) do
+    lines |> Enum.map(&eval_line/1)
+  end
+
+  def parse_paren(line) do
+    Regex.run(~r/\([^\(^\)]*\)/, line)
+  end
+
+  def eval_line(line) do
+   # parse_paren(line)
+   chars = String.split(line, ~r/\s/, trim: true)
+   int_chars = chars |> Enum.map(fn(char) ->
+     if char != "*" and char != "+" do
+       String.to_integer(char)
+     else
+       char
+     end
+   end)
+   eval_chars(int_chars, 0)
+  end
+
+ def eval_chars(chars, prev_char) do
+   #IO.inspect(prev_char)
+   #IO.inspect(chars)
+   if Enum.empty?(chars) do
+     prev_char
+   else
+     [next_char | remaining_chars] = chars
+     case next_char do
+       "+" ->
+         [next_operand | next_remaining] = remaining_chars
+         eval_chars(next_remaining, prev_char + next_operand)
+       "*" ->
+         [next_operand | next_remaining] = remaining_chars
+         eval_chars(next_remaining, prev_char * next_operand)
+       _ -> eval_chars(remaining_chars, next_char)
+     end
+   end
+ end
+end
+
+IO.inspect(FunnyMath.do_homework(lines))
