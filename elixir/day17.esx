@@ -13,15 +13,42 @@ IO.inspect(lines)
 
 
 defmodule Pocket do
+
+  def get_offsets(remaining_dimensions) do
+
+   #[-1, 0, 1] |> Enum.map(fn(n) ->
+   #  [n] ++
+   #end)
+
+    if remaining_dimensions == 1 do
+      [-1,0,1]
+    else
+      for x <- [-1,0,1], y <- get_offsets(remaining_dimensions - 1), do: [x, y] |> List.flatten
+    end
+  end
+
+  def get_neighbor_offsets() do
+
+
+    #if remaining_dimensions == 1 do
+     #  n
+     #else
+     #  get_neighbor_offsets(remaining_dimensions - 1) |> Enum.map(&([n,&1]))
+     #end
+
+  end
+
   def get_neighbors_for(map, xspot,yspot) do
-    n_pos = [[-1, -1, 0], [0, -1, 0], [1, -1, 0],
-             [-1, 0, 0]             , [1, 0, 0],
-             [-1, 1, 0],  [0, 1, 0],  [1, 1, 0] ]
-    above_pos = [[-1, -1, 0], [0, -1, 0], [1, -1, 0],
-             [-1, 0, 0]             , [1, 0, 0],
-             [-1, 1, 0],  [0, 1, 0],  [1, 1, 0] ]
-    n_pos |> Enum.map(fn([x,y]) ->
-      map |> Map.get(yspot+y, %{}) |> Map.get(xspot+x, nil)
-    end)
+   #n_pos = [[-1, -1, 0], [0, -1, 0], [1, -1, 0],
+   #         [-1, 0, 0]             , [1, 0, 0],
+   #         [-1, 1, 0],  [0, 1, 0],  [1, 1, 0] ]
+   #above_pos = [[-1, -1, 0], [0, -1, 0], [1, -1, 0],
+   #         [-1, 0, 0]             , [1, 0, 0],
+   #         [-1, 1, 0],  [0, 1, 0],  [1, 1, 0] ]
+   #n_pos |> Enum.map(fn([x,y]) ->
+   #  map |> Map.get(yspot+y, %{}) |> Map.get(xspot+x, nil)
+   #end)
   end
 end
+
+IO.inspect(Pocket.get_offsets(4))
