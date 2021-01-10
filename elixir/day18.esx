@@ -1,40 +1,53 @@
-IEx.configure(inspect: [charlists: :as_lists])
-# {:ok, sessionkey} = File.read("input/jason")
-# #IO.inspect sessionkey
+#IO.configure(inspect: [charlists: :as_lists])
+ {:ok, sessionkey} = File.read("input/jason")
+ #IO.inspect sessionkey
 
-# url = "https://adventofcode.com/2020/day/16/input"
-# Application.ensure_all_started(:inets)
-# Application.ensure_all_started(:ssl)
+ url = "https://adventofcode.com/2020/day/18/input"
+ Application.ensure_all_started(:inets)
+ Application.ensure_all_started(:ssl)
 
-# {:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
-#   :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+ {:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+   :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
 
-sample = '1 + (2 * 3) + (4 * (5 + 6))'
-sample = '1 + 2 * 3 + 4 * 5 + 6'
+#sample = '1 + (2 * 3) + (4 * (5 + 6))'
+#sample = '1 + 2 * 3 + 4 * 5 + 6'
+#sample = '2 * 3 + (4 * 5)
+#5 + (8 * 3 + 9 + 3 * 4 * 3)'
 
-lines = String.split(List.to_string(sample), "\n", trim: true)
+lines = String.split(List.to_string(body), "\n", trim: true)
 IO.inspect(lines)
 
 defmodule FunnyMath do
   def do_homework(lines) do
-    lines |> Enum.map(&eval_line/1)
+    lines |> Enum.map(&eval_line/1)|> Enum.reduce(0, &(&1 + &2))
   end
 
   def parse_paren(line) do
-    Regex.run(~r/\([^\(^\)]*\)/, line)
+    Regex.run(~r/\([^\(^\)]*\)/, line, return: :index)
   end
 
   def eval_line(line) do
-   # parse_paren(line)
-   chars = String.split(line, ~r/\s/, trim: true)
-   int_chars = chars |> Enum.map(fn(char) ->
-     if char != "*" and char != "+" do
-       String.to_integer(char)
-     else
-       char
-     end
-   end)
-   eval_chars(int_chars, 0)
+    #IO.inspect(line)
+    result = parse_paren(line)
+    parsed_line = case result do
+      [{idx, len}] ->
+        substring = String.slice(line, idx+1, len-2)
+        Integer.to_string(eval_line(String.replace(line, ~r/\([^\(^\)]*\)/, Integer.to_string(eval_line(substring)), global: false)))
+      nil -> line
+    end
+
+    addition_parts = String.split(parsed_line, ~r/\*/, trim: true)
+    addition_parts |> Enum.reduce(1, fn(term, acc) ->
+      chars = String.split(term, ~r/\s/, trim: true)
+      int_chars = chars |> Enum.map(fn(char) ->
+        if char != "*" and char != "+" do
+          String.to_integer(char)
+        else
+          char
+        end
+      end)
+      eval_chars(int_chars, 0) * acc
+    end)
   end
 
  def eval_chars(chars, prev_char) do
@@ -57,4 +70,4 @@ defmodule FunnyMath do
  end
 end
 
-IO.inspect(FunnyMath.do_homework(lines))
+IO.inspect(FunnyMath.do_homework(lines), charlists: false)
