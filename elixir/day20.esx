@@ -1,0 +1,133 @@
+{:ok, sessionkey} = File.read("input/jason")
+#{:ok, sessionkey} = File.read("input/patrick")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/20/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+
+#{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+#  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+
+sample='Tile 2311:
+..##.#..#.
+##..#.....
+#...##..#.
+####.#...#
+##.##.###.
+##...#.###
+.#.#.#..##
+..#....#..
+###...#.#.
+..###..###
+
+Tile 1951:
+#.##...##.
+#.####...#
+.....#..##
+#...######
+.##.#....#
+.###.#####
+###.##.##.
+.###....#.
+..#.#..#.#
+#...##.#..
+
+Tile 1171:
+####...##.
+#..##.#..#
+##.#..#.#.
+.###.####.
+..###.####
+.##....##.
+.#...####.
+#.##.####.
+####..#...
+.....##...
+
+Tile 1427:
+###.##.#..
+.#..#.##..
+.#.##.#..#
+#.#.#.##.#
+....#...##
+...##..##.
+...#.#####
+.#.####.#.
+..#..###.#
+..##.#..#.
+
+Tile 1489:
+##.#.#....
+..##...#..
+.##..##...
+..#...#...
+#####...#.
+#..#.#.#.#
+...#.#.#..
+##.#...##.
+..##.##.##
+###.##.#..
+
+Tile 2473:
+#....####.
+#..#.##...
+#.##..#...
+######.#.#
+.#...#.#.#
+.#########
+.###.#..#.
+########.#
+##...##.#.
+..###.#.#.
+
+Tile 2971:
+..#.#....#
+#...###...
+#.#.###...
+##.##..#..
+.#####..##
+.#..####.#
+#..#.#..#.
+..####.###
+..#.#.###.
+...#.#.#.#
+
+Tile 2729:
+...#.#.#.#
+####.#....
+..#.#.....
+....#..#.#
+.##..##.#.
+.#.####...
+####.#.#..
+##.####...
+##..#.##..
+#.##...##.
+
+Tile 3079:
+#.#.#####.
+.#..######
+..#.......
+######....
+####.#..#.
+.#...#.##.
+#.#####.##
+..#.###...
+..#.......
+..#.###...'
+
+tile_dict = String.split(List.to_string(sample), "\n\n", trim: true) |> Enum.reduce(%{}, fn(t, acc) ->
+  [unparsed_id, unparsed_tile] = String.split(t, ":", trim: true)
+  [_, id] = String.split(unparsed_id, " ", trim: true)
+  tile_rows = String.split(unparsed_tile, "\n", trim: true)
+  top = List.first(tile_rows)
+  right = Enum.map(tile_rows, &(String.at(&1, -1))) |> Enum.join("")
+  bottom = List.last(tile_rows)
+  left = Enum.map(tile_rows, &(String.at(&1, 0))) |> Enum.join("")
+  Map.put(acc, id, [top, right, bottom, left])
+  end)
+IO.inspect(tile_dict)
+IO.inspect(length(Map.keys(tile_dict)))
