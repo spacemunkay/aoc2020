@@ -1,0 +1,139 @@
+{:ok, sessionkey} = File.read("input/jason")
+#{:ok, sessionkey} = File.read("input/patrick")
+#IO.inspect sessionkey
+
+url = "https://adventofcode.com/2020/day/19/input"
+Application.ensure_all_started(:inets)
+Application.ensure_all_started(:ssl)
+
+sample='0: 8 11
+8: 42
+11: 42 31
+42: "a"
+31: "b"
+
+aabab
+aaabb'
+
+given_sample='42: 9 14 | 10 1
+9: 14 27 | 1 26
+10: 23 14 | 28 1
+1: "a"
+11: 42 31
+5: 1 14 | 15 1
+19: 14 1 | 14 14
+12: 24 14 | 19 1
+16: 15 1 | 14 14
+31: 14 17 | 1 13
+6: 14 14 | 1 14
+2: 1 24 | 14 4
+0: 8 11
+13: 14 3 | 1 12
+15: 1 | 14
+17: 14 2 | 1 7
+23: 25 1 | 22 14
+28: 16 1
+4: 1 1
+20: 14 14 | 1 15
+3: 5 14 | 16 1
+27: 1 6 | 14 18
+14: "b"
+21: 14 1 | 1 14
+25: 1 1 | 1 14
+22: 14 14
+8: 42
+26: 14 22 | 1 20
+18: 15 15
+7: 14 5 | 1 21
+24: 14 1
+
+abbbbbabbbaaaababbaabbbbabababbbabbbbbbabaaaa
+bbabbbbaabaabba
+babbbbaabbbbbabbbbbbaabaaabaaa
+aaabbbbbbaaaabaababaabababbabaaabbababababaaa
+bbbbbbbaaaabbbbaaabbabaaa
+bbbababbbbaaaaaaaabbababaaababaabab
+ababaaaaaabaaab
+ababaaaaabbbaba
+baabbaaaabbaaaababbaababb
+abbbbabbbbaaaababbbbbbaaaababb
+aaaaabbaabaaaaababaa
+aaaabbaaaabbaaa
+aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
+babaaabbbaaabaababbaabababaaab
+aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba'
+
+
+{:ok, {{'HTTP/1.1', 200, 'OK'}, _headers, body}} =
+  :httpc.request(:get, {url, [{'Cookie', to_charlist("session="<>sessionkey)}]}, [], [])
+
+[rules ,messages] = String.split(List.to_string(body), "\n\n", trim: true) |> Enum.map(&String.split(&1, "\n", trim: true))
+#IO.inspect(rules, charlists: false)
+#IO.inspect(messages)
+
+defmodule Parser do
+
+  def rules_dict(rules) do
+    rules |> Enum.reduce(%{}, fn(rule_line, dict_acc) ->
+      [key_idx, rule] = rule_line |> String.split(": ", trim: true)
+      Map.put(dict_acc, key_idx, rule)
+    end)
+  end
+
+  def match?(rules, message, rule_idx) do
+    {:ok, regex} = Regex.compile("^" <> gen_regex(rules, rule_idx) <> "$")
+    #IO.inspect(regex)
+    String.match?(message, regex)
+  end
+
+  def gen_regex(rules, rule_idx) do
+    rule = Map.get(rules, rule_idx)
+    or_conditions = rule |> String.split(" | ", trim: true) |> Enum.map(fn(rule_part) ->
+      rule_part |> String.split(" ", trim: true) |> Enum.map(fn(rule_key) ->
+        case Integer.parse(rule_key) do
+          :error -> String.replace(rule_key, "\"", "")
+          #part2
+          {8, _} ->
+            "(" <> gen_regex(rules, "42") <> ")+"
+          #part2
+          {11, _} -> "(?<eleven>(#{gen_regex(rules, "42")})(?&eleven)?(#{gen_regex(rules, "31")}))"
+          {_num, _} -> gen_regex(rules, rule_key)
+        end
+      end)
+    end)
+    if length(or_conditions) > 1 do
+    "(" <> Enum.join(or_conditions, "|") <> ")"
+    else
+      Enum.join(or_conditions, "|")
+    end
+  end
+
+  def find_max_msg_len(messages) do
+    messages |> Enum.reduce(0, fn(msg, acc) ->
+        if String.length(msg) > acc do
+          String.length(msg)
+        else
+          acc
+        end
+    end)
+  end
+
+  def part1(rules_lines, messages, rule_idx) do
+    rules = rules_dict(rules_lines)
+    messages |> Enum.reduce(0, fn(msg, acc) ->
+      if match?(rules, msg, rule_idx) do
+        acc + 1
+      else
+        #IO.inspect("no match")
+        #IO.inspect(msg)
+        acc
+      end
+    end)
+  end
+end
+
+#IO.inspect(Parser.rules_dict(rules), charlists: false)
+#IO.inspect(Parser.gen_regex(Parser.rules_dict(rules), "0"))
+#IO.inspect(Parser.match?(Parser.rules_dict(rules), "bababa", "0"))
+#IO.inspect(Parser.find_max_msg_len(messages))
+IO.inspect(Parser.part1(rules, messages, "0"))
