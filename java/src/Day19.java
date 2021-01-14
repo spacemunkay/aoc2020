@@ -79,6 +79,9 @@ public class Day19 {
 	}
 
 	private static String elevensies(Map<String, String> ruleMap, String a, String b, boolean secondTime, int reps) {
+		// return createRuleExpression(ruleMap, a, secondTime, reps) + "(?R)?" + createRuleExpression(ruleMap, a, secondTime, reps);
+		// return "(?<eleven>(" + createRuleExpression(ruleMap, a, secondTime, reps) + ")(?&eleven)?(" + createRuleExpression(ruleMap, b, secondTime, reps) + "))";
+		
 		String retStr = "";
 		for (int i = 0; i < reps; i++) {
 			retStr += createRuleExpression(ruleMap, a, secondTime, reps);
@@ -87,6 +90,7 @@ public class Day19 {
 			retStr += createRuleExpression(ruleMap, b, secondTime, reps);
 		}
 		return retStr;
+		
 	}
 
 	private static Map<String, String> createRuleMap(String rules) {
