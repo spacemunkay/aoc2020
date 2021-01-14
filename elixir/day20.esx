@@ -127,7 +127,72 @@ tile_dict = String.split(List.to_string(sample), "\n\n", trim: true) |> Enum.red
   right = Enum.map(tile_rows, &(String.at(&1, -1))) |> Enum.join("")
   bottom = List.last(tile_rows)
   left = Enum.map(tile_rows, &(String.at(&1, 0))) |> Enum.join("")
-  Map.put(acc, id, [top, right, bottom, left])
+borderless_rows = ...
+  Map.put(acc, id, %{:top => top, :right => right, :bottom => bottom, :left => left, :rows => tile_rows, :borderless_rows: borderless_rows})
   end)
+
+defmodule Image
+
+  def exact_match?(tile_dict, tile1, tile2) do
+    [:top, :right, :bottom, :left] |> Enum.map(fn(direction) ->
+      if tile1[direction] == tile2[direction] do
+        direction
+      else
+        nil
+      end
+    end) |> Enum.filter(&(&1 != nil))
+  end
+
+  def matches(dict, tiles) do
+    if Enum.empty?(tiles) do
+      dict
+    else
+      [curr_tile | remaining] = tiles
+      Enum.map(remaining, fn(r_tile) ->
+        tile match? tile2
+      end)
+
+      match?
+      reorient()
+      %{ :tile_top => reoriented(id), :tile_right => , :tile_bottom => :tile_left, :rows => tile_rows, :matched_count => 2}
+    end
+
+  end
+
+  def build(completed, tiles) do
+    matched_dict = tiles |> Enum.reduce(%{}, fn(tile, acc_dict) ->
+
+      matches
+    end)
+
+    top_left_corner = matched_dict |> filter( matched_count == 2 && tile_top == nil && tile_left == nil)
+    build_down(matched_dict, [], top_left_corner)
+
+
+  end
+
+  def build_down(dict, rows, curr_tile) do
+    row = build_right(dict, [], curr_tile)
+    next_tile = dict[curr_tile.tile_bottom]
+    if next_tile do
+      build_down(dict, rows ++ row, next_tile)
+    else
+      rows
+    end
+  end
+
+  def build_right(dict, block_row, curr_tile) do
+     next_tile = dict[curr_tile.tile_right]
+     if next_tile do
+      prepped_block_row = if List.empty?(block_row) do curr_tile.borderless_tiles |> Enum.map(&("")) else block_row end
+      new_block_row = curr_tile.borderless_tiles |> Enum.with_index |> Enum.map(fn(subrow, idx) ->
+        subrow <> Enum.at(new_block_row, idx)
+      end)
+      build_right(dict, new_block_row, next_tile)
+    else
+      block_row
+    end
+  end
+end
 IO.inspect(tile_dict)
 IO.inspect(length(Map.keys(tile_dict)))
